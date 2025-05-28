@@ -68,7 +68,7 @@ func TestIntegrationNewTx(t *testing.T) {
 			env := testhelpers.SetupTestEnv(t)
 			defer env.Db.Close()
 
-			testhelpers.SeedTestUser(t, env.UserQ, tc.UserID)
+			testhelpers.SeedTestUser(t, env.UserQ, tc.UserID, false)
 			testhelpers.SeedTestCategories(t, env.Db)
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/transactions", bytes.NewBufferString(tc.ReqBody))
@@ -80,10 +80,10 @@ func TestIntegrationNewTx(t *testing.T) {
 				req = req.WithContext(context.WithValue(req.Context(), constants.UserIDKey, tc.UserID))
 			}
 
-			env.Router.POST("/transactions", env.Handler.NewTransaction)
+			env.Router.POST("/transactions", env.Handlers.TxHandler.NewTransaction)
 			env.Router.ServeHTTP(w, req)
 			actualResponse := testhelpers.ProcessResponse(w, t)
-			testhelpers.CheckTxHTTPResponse(t, w, tc, actualResponse)
+			testhelpers.CheckHTTPResponse(t, w, tc.ExpectedError, tc.ExpectedStatusCode, tc.ExpectedResponse, actualResponse)
 		})
 	}
 
